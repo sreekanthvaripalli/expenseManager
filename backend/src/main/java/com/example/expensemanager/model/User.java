@@ -16,7 +16,7 @@ public class User {
     @Column(nullable = false)
     private String passwordHash;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "full_name")
     private String fullName;
 
     public Long getId() {

@@ -22,7 +22,7 @@ public class Expense {
     @Column(nullable = false)
     private BigDecimal amount;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "expense_date")
     private LocalDate date;
 
     @Column

@@ -61,6 +61,16 @@ public class ExpenseController {
     public List<MonthlySummaryItem> monthlySummary(@RequestParam int year) {
         return expenseService.monthlySummary(getCurrentUser(), year);
     }
+
+    @PutMapping("/{id}")
+    public Expense update(@PathVariable Long id, @Valid @RequestBody ExpenseRequest request) {
+        return expenseService.updateExpense(getCurrentUser(), id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        expenseService.deleteExpense(getCurrentUser(), id);
+    }
 }
 
 

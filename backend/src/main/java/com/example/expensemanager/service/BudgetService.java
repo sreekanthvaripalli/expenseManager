@@ -49,6 +49,29 @@ public class BudgetService {
         return budgetRepository.save(b);
     }
 
+    @Transactional
+    public Budget updateBudget(User user, Long id, BudgetRequest request) {
+        Budget budget = budgetRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Budget not found"));
+
+        if (!budget.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        budget.setYear(request.getYear());
+        budget.setMonth(request.getMonth());
+        budget.setLimitAmount(request.getLimitAmount());
+
+        if (request.getCategoryId() != null) {
+            Optional<Category> categoryOpt = categoryRepository.findById(request.getCategoryId());
+            categoryOpt.ifPresent(budget::setCategory);
+        } else {
+            budget.setCategory(null);
+        }
+
+        return budgetRepository.save(budget);
+    }
+
     public List<BudgetStatusResponse> getBudgetsWithStatus(User user, int year, int month) {
         List<Budget> budgets = budgetRepository.findByUserAndYearAndMonth(user, year, month);
         YearMonth ym = YearMonth.of(year, month);

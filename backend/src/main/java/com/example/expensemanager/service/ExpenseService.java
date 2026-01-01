@@ -89,6 +89,42 @@ public class ExpenseService {
                 .map(e -> new MonthlySummaryItem(e.getKey().toString(), e.getValue()))
                 .toList();
     }
+
+    @Transactional
+    public Expense updateExpense(User user, Long id, ExpenseRequest request) {
+        Expense expense = expenseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Expense not found"));
+
+        if (!expense.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        expense.setAmount(request.getAmount());
+        expense.setDate(request.getDate());
+        expense.setDescription(request.getDescription());
+        expense.setRecurring(request.isRecurring());
+
+        if (request.getCategoryId() != null) {
+            Optional<Category> categoryOpt = categoryRepository.findById(request.getCategoryId());
+            categoryOpt.ifPresent(expense::setCategory);
+        } else {
+            expense.setCategory(null);
+        }
+
+        return expenseRepository.save(expense);
+    }
+
+    @Transactional
+    public void deleteExpense(User user, Long id) {
+        Expense expense = expenseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Expense not found"));
+
+        if (!expense.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        expenseRepository.deleteById(id);
+    }
 }
 
 

@@ -18,10 +18,10 @@ public class Budget {
     @ManyToOne
     private Category category; // null = overall budget
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "budget_year")
     private int year;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "budget_month")
     private int month; // 1-12
 
     @Column(nullable = false)

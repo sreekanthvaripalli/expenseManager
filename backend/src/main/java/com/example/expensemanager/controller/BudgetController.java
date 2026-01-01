@@ -47,6 +47,18 @@ public class BudgetController {
                 .orElseThrow();
     }
 
+    @PutMapping("/{id}")
+    public BudgetStatusResponse update(@PathVariable Long id, @Valid @RequestBody BudgetRequest request) {
+        var user = getCurrentUser();
+        var budget = budgetService.updateBudget(user, id, request);
+        return budgetService
+                .getBudgetsWithStatus(user, budget.getYear(), budget.getMonth())
+                .stream()
+                .filter(b -> b.getId().equals(budget.getId()))
+                .findFirst()
+                .orElseThrow();
+    }
+
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         budgetService.deleteBudget(id);

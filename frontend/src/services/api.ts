@@ -20,6 +20,21 @@ export async function createExpense(payload: {
   return res.data;
 }
 
+export async function updateExpense(id: number, payload: {
+  amount: number;
+  date: string;
+  description?: string;
+  recurring?: boolean;
+  categoryId?: number;
+}) {
+  const res = await client.put(`/expenses/${id}`, payload);
+  return res.data;
+}
+
+export async function deleteExpense(id: number) {
+  await client.delete(`/expenses/${id}`);
+}
+
 export async function getExpenseSummary(params?: { startDate?: string; endDate?: string }) {
   const res = await client.get("/expenses/summary", { params });
   return res.data;
@@ -68,6 +83,16 @@ export async function createBudget(payload: {
   categoryId?: number;
 }) {
   const res = await client.post("/budgets", payload);
+  return res.data as BudgetStatus;
+}
+
+export async function updateBudget(id: number, payload: {
+  year: number;
+  month: number;
+  limitAmount: number;
+  categoryId?: number;
+}) {
+  const res = await client.put(`/budgets/${id}`, payload);
   return res.data as BudgetStatus;
 }
 
