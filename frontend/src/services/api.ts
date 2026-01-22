@@ -4,6 +4,15 @@ const client = axios.create({
   baseURL: "http://localhost:8080/api"
 });
 
+// Add JWT token to requests if available
+client.interceptors.request.use((config) => {
+  const token = localStorage.getItem("authToken");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export async function getExpenses(params?: { startDate?: string; endDate?: string }) {
   const res = await client.get("/expenses", { params });
   return res.data;
@@ -100,4 +109,26 @@ export async function deleteBudget(id: number) {
   await client.delete(`/budgets/${id}`);
 }
 
+// Auth functions
+export interface AuthResponse {
+  token: string;
+  email: string;
+  fullName: string;
+}
 
+export async function register(payload: {
+  email: string;
+  password: string;
+  fullName: string;
+}) {
+  const res = await client.post("/auth/register", payload);
+  return res.data as AuthResponse;
+}
+
+export async function login(payload: {
+  email: string;
+  password: string;
+}) {
+  const res = await client.post("/auth/login", payload);
+  return res.data as AuthResponse;
+}

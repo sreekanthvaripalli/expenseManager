@@ -8,6 +8,8 @@ import com.example.expensemanager.model.User;
 import com.example.expensemanager.repository.UserRepository;
 import com.example.expensemanager.service.ExpenseService;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -26,9 +28,10 @@ public class ExpenseController {
         this.userRepository = userRepository;
     }
 
-    // For now, use the first user as a demo "current user"
     private User getCurrentUser() {
-        return userRepository.findAll().stream().findFirst().orElseThrow();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return userRepository.findByEmail(email).orElseThrow();
     }
 
     @PostMapping
@@ -72,5 +75,3 @@ public class ExpenseController {
         expenseService.deleteExpense(getCurrentUser(), id);
     }
 }
-
-
