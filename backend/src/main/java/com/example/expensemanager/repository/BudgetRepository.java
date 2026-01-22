@@ -9,6 +9,6 @@ import java.util.List;
 public interface BudgetRepository extends JpaRepository<Budget, Long> {
 
     List<Budget> findByUserAndYearAndMonth(User user, int year, int month);
+
+    long countByUser(User user);
 }
-
-

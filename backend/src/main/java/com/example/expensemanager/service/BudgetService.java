@@ -1,5 +1,6 @@
 package com.example.expensemanager.service;
 
+import com.example.expensemanager.controller.BusinessException;
 import com.example.expensemanager.dto.BudgetRequest;
 import com.example.expensemanager.dto.BudgetStatusResponse;
 import com.example.expensemanager.model.Budget;
@@ -8,6 +9,7 @@ import com.example.expensemanager.model.Expense;
 import com.example.expensemanager.model.User;
 import com.example.expensemanager.repository.BudgetRepository;
 import com.example.expensemanager.repository.CategoryRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +37,16 @@ public class BudgetService {
 
     @Transactional
     public Budget createBudget(User user, BudgetRequest request) {
+        // Check if user has base currency set, if not set it now
+        String baseCurrency = user.getBaseCurrency();
+        if (baseCurrency == null || baseCurrency.trim().isEmpty()) {
+            // Set base currency from request or default to INR
+            baseCurrency = request.getCurrency() != null && !request.getCurrency().trim().isEmpty()
+                ? request.getCurrency()
+                : "INR";
+            user.setBaseCurrency(baseCurrency);
+        }
+
         Budget b = new Budget();
         b.setUser(user);
         b.setYear(request.getYear());
@@ -112,5 +124,3 @@ public class BudgetService {
         budgetRepository.deleteById(id);
     }
 }
-
-

@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { login, register, AuthResponse } from '../services/api';
+import { CURRENCIES } from './CurrencyContext';
 
 interface User {
   email: string;
   fullName: string;
+  baseCurrency?: string;
 }
 
 interface AuthContextType {
@@ -11,6 +13,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, fullName: string) => Promise<void>;
   logout: () => void;
+  updateBaseCurrency: (baseCurrency: string) => void;
   isAuthenticated: boolean;
   loading: boolean;
 }
@@ -54,7 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleLogin = async (email: string, password: string) => {
     const response: AuthResponse = await login({ email, password });
 
-    const userData = { email: response.email, fullName: response.fullName };
+    const userData = { email: response.email, fullName: response.fullName, baseCurrency: response.baseCurrency };
     setUser(userData);
 
     localStorage.setItem('authToken', response.token);
@@ -64,7 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleRegister = async (email: string, password: string, fullName: string) => {
     const response: AuthResponse = await register({ email, password, fullName });
 
-    const userData = { email: response.email, fullName: response.fullName };
+    const userData = { email: response.email, fullName: response.fullName, baseCurrency: response.baseCurrency };
     setUser(userData);
 
     localStorage.setItem('authToken', response.token);
@@ -77,11 +80,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('user');
   };
 
+  const updateBaseCurrency = (baseCurrency: string) => {
+    if (user) {
+      const updatedUser = { ...user, baseCurrency };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
+
   const value: AuthContextType = {
     user,
     login: handleLogin,
     register: handleRegister,
     logout: handleLogout,
+    updateBaseCurrency,
     isAuthenticated: !!user,
     loading,
   };

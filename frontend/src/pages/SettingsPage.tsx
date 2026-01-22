@@ -7,9 +7,11 @@ import {
   deleteBudget,
   deleteCategory,
   getBudgets,
-  getCategories
+  getCategories,
+  updateBaseCurrency
 } from "../services/api";
 import { useCurrency, CURRENCIES } from "../contexts/CurrencyContext";
+import { useAuth } from "../contexts/AuthContext";
 
 interface Category {
   id: number;
@@ -19,6 +21,7 @@ interface Category {
 
 function SettingsPage() {
   const { currency, setCurrency, formatAmount } = useCurrency();
+  const { user, updateBaseCurrency } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [name, setName] = useState("");
   const [color, setColor] = useState("#0ea5e9");
@@ -28,7 +31,9 @@ function SettingsPage() {
   const [budgetMonth, setBudgetMonth] = useState(now.getMonth() + 1);
   const [budgetAmount, setBudgetAmount] = useState("");
   const [budgetCategoryId, setBudgetCategoryId] = useState<string>("");
+  const [budgetCurrency, setBudgetCurrency] = useState<string>("INR");
   const [editingBudgetId, setEditingBudgetId] = useState<number | null>(null);
+  const [apiError, setApiError] = useState<{error: string; message: string; type: string} | null>(null);
 
   const load = () => {
     getCategories().then(setCategories).catch(console.error);
@@ -71,7 +76,8 @@ function SettingsPage() {
       year: budgetYear,
       month: budgetMonth,
       limitAmount: parseFloat(budgetAmount),
-      categoryId: budgetCategoryId ? Number(budgetCategoryId) : undefined
+      categoryId: budgetCategoryId ? Number(budgetCategoryId) : undefined,
+      currency: !user?.baseCurrency && !editingBudgetId ? budgetCurrency : undefined
     };
 
     const promise = editingBudgetId
@@ -83,9 +89,35 @@ function SettingsPage() {
         setBudgetAmount("");
         setBudgetCategoryId("");
         setEditingBudgetId(null);
+        setApiError(null);
         setBudgets((prev) => [...prev.filter((x) => x.id !== b.id), b]);
+
+        // If we just set the base currency, update the contexts
+        if (!user?.baseCurrency && !editingBudgetId && budgetCurrency) {
+          updateBaseCurrency(budgetCurrency);
+          const selectedCurrency = CURRENCIES.find((c) => c.code === budgetCurrency);
+          if (selectedCurrency) {
+            setCurrency(selectedCurrency);
+          }
+        }
       })
-      .catch(console.error);
+      .catch((error) => {
+        if (error.response?.data) {
+          const errorData = error.response.data;
+          setApiError({
+            error: errorData.error || "UNKNOWN_ERROR",
+            message: errorData.message || "An unexpected error occurred",
+            type: errorData.type || "SYSTEM_ERROR"
+          });
+        } else {
+          console.error(error);
+          setApiError({
+            error: "NETWORK_ERROR",
+            message: "Unable to connect to the server. Please check your internet connection.",
+            type: "SYSTEM_ERROR"
+          });
+        }
+      });
   };
 
   const handleBudgetEdit = (budget: BudgetStatus) => {
@@ -134,27 +166,53 @@ function SettingsPage() {
   return (
     <div>
       <h1>Settings</h1>
-      <section className="card">
-        <h2>Currency</h2>
-        <div className="form-grid">
-          <label>
-            Select Currency
-            <select
-              value={currency.code}
-              onChange={(e) => {
-                const selected = CURRENCIES.find((c) => c.code === e.target.value);
-                if (selected) setCurrency(selected);
+
+      {apiError && (
+        <div
+          style={{
+            padding: 16,
+            marginBottom: 16,
+            borderRadius: 8,
+            backgroundColor: apiError.type === "AUTHENTICATION_ERROR" ? "#fef2f2" : "#fffbeb",
+            border: `1px solid ${apiError.type === "AUTHENTICATION_ERROR" ? "#fecaca" : "#fde68a"}`,
+            color: apiError.type === "AUTHENTICATION_ERROR" ? "#991b1b" : "#92400e",
+            fontWeight: 500
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <svg style={{ width: 20, height: 20, flexShrink: 0 }} fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <strong>
+              {apiError.type === "AUTHENTICATION_ERROR" ? "Authentication Error" :
+               apiError.type === "BUSINESS_ERROR" ? "Action Required" :
+               "System Error"}
+            </strong>
+          </div>
+          <p style={{ margin: 0, fontSize: 14 }}>
+            {apiError.message}
+          </p>
+          <div style={{ marginTop: 12 }}>
+            <button
+              onClick={() => setApiError(null)}
+              style={{
+                backgroundColor: apiError.type === "AUTHENTICATION_ERROR" ? "#dc2626" : "#d97706",
+                color: "white",
+                padding: "6px 12px",
+                borderRadius: 4,
+                border: "none",
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer"
               }}
             >
-              {CURRENCIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.name} ({c.symbol})
-                </option>
-              ))}
-            </select>
-          </label>
+              Dismiss
+            </button>
+          </div>
         </div>
-      </section>
+      )}
+
+
       <section className="card" style={{ marginTop: 16 }}>
         <h2>Categories</h2>
         <form className="form-grid" onSubmit={onSubmit}>
@@ -201,6 +259,35 @@ function SettingsPage() {
           </button>
         </div>
         <form className="form-grid" onSubmit={onBudgetSubmit}>
+          {!user?.baseCurrency && !editingBudgetId && (
+            <div style={{
+              gridColumn: "1 / -1",
+              padding: 16,
+              backgroundColor: "#eff6ff",
+              border: "1px solid #3b82f6",
+              borderRadius: 8,
+              marginBottom: 16
+            }}>
+              <h4 style={{ margin: "0 0 8px 0", color: "#1e40af" }}>Set Up Your Base Currency</h4>
+              <p style={{ margin: "0 0 12px 0", fontSize: 14, color: "#3730a3" }}>
+                Choose your preferred currency for expense tracking. All expenses will be converted and stored in this currency.
+              </p>
+              <label style={{ display: "block", marginBottom: 8 }}>
+                Base Currency
+                <select
+                  value={budgetCurrency}
+                  onChange={(e) => setBudgetCurrency(e.target.value)}
+                  style={{ width: "100%", marginTop: 4 }}
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name} ({c.symbol})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
           <label>
             Category
             <select
@@ -216,7 +303,7 @@ function SettingsPage() {
             </select>
           </label>
           <label>
-            Monthly limit ({currency.symbol})
+            Monthly limit ({user?.baseCurrency ? currency.symbol : budgetCurrency === "INR" ? "₹" : budgetCurrency === "USD" ? "$" : budgetCurrency === "EUR" ? "€" : budgetCurrency})
             <input
               type="number"
               step="0.01"
@@ -318,5 +405,3 @@ function SettingsPage() {
 }
 
 export default SettingsPage;
-
-

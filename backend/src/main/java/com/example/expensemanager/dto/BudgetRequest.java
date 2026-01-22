@@ -25,6 +25,8 @@ public class BudgetRequest {
     @DecimalMin("0.0")
     private BigDecimal limitAmount;
 
+    private String currency; // Base currency for the user (set when creating first budget)
+
     public Long getCategoryId() {
         return categoryId;
     }
@@ -56,6 +58,12 @@ public class BudgetRequest {
     public void setLimitAmount(BigDecimal limitAmount) {
         this.limitAmount = limitAmount;
     }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
 }
-
-

@@ -1,6 +1,8 @@
 import { FormEvent, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { createExpense, updateExpense, deleteExpense, getCategories, getExpenses, getBudgets, BudgetStatus } from "../services/api";
 import { useCurrency } from "../contexts/CurrencyContext";
+import { useAuth } from "../contexts/AuthContext";
 
 interface Category {
   id: number;
@@ -9,7 +11,9 @@ interface Category {
 
 interface Expense {
   id: number;
-  amount: number;
+  amount: number; // Always in USD (base currency)
+  originalAmount?: number; // Original amount entered by user
+  originalCurrency?: string; // Original currency entered by user
   date: string;
   description?: string;
   recurring: boolean;
@@ -17,7 +21,9 @@ interface Expense {
 }
 
 function ExpensesPage() {
-  const { formatAmount } = useCurrency();
+  const { formatAmount, currency: userCurrency } = useCurrency();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [budgets, setBudgets] = useState<BudgetStatus[]>([]);
@@ -25,10 +31,13 @@ function ExpensesPage() {
   const [to, setTo] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [amount, setAmount] = useState("");
+  const [selectedCurrency, setSelectedCurrency] = useState(userCurrency.code);
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
   const [recurring, setRecurring] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [baseCurrencyError, setBaseCurrencyError] = useState(false);
+  const [apiError, setApiError] = useState<{error: string; message: string; type: string} | null>(null);
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
@@ -55,13 +64,14 @@ function ExpensesPage() {
 
     const payload = {
       amount: parseFloat(amount),
+      currency: selectedCurrency,
       date,
       description: description || undefined,
       recurring,
       categoryId: selectedCategory ? Number(selectedCategory) : undefined
     };
 
-    const promise = editingId 
+    const promise = editingId
       ? updateExpense(editingId, payload)
       : createExpense(payload);
 
@@ -73,15 +83,43 @@ function ExpensesPage() {
         setRecurring(false);
         setSelectedCategory("");
         setEditingId(null);
+        setBaseCurrencyError(false);
         load();
         getBudgets(currentYear, currentMonth).then(setBudgets).catch(console.error);
       })
-      .catch(console.error);
+      .catch((error) => {
+        if (error.response?.data) {
+          const errorData = error.response.data;
+          if (errorData.error === "BASE_CURRENCY_REQUIRED") {
+            setApiError({
+              error: "BASE_CURRENCY_REQUIRED",
+              message: errorData.message || "Please select your base currency in settings before adding expenses.",
+              type: "BUSINESS_ERROR"
+            });
+          } else if (errorData.error === "BUDGET_REQUIRED") {
+            setBaseCurrencyError(true);
+          } else {
+            setApiError({
+              error: errorData.error || "UNKNOWN_ERROR",
+              message: errorData.message || "An unexpected error occurred",
+              type: errorData.type || "SYSTEM_ERROR"
+            });
+          }
+        } else {
+          console.error(error);
+          setApiError({
+            error: "NETWORK_ERROR",
+            message: "Unable to connect to the server. Please check your internet connection.",
+            type: "SYSTEM_ERROR"
+          });
+        }
+      });
   };
 
   const handleEdit = (expense: Expense) => {
     setEditingId(expense.id);
-    setAmount(expense.amount.toString());
+    setAmount(expense.originalAmount?.toString() || expense.amount.toString());
+    setSelectedCurrency(expense.originalCurrency || userCurrency.code);
     setDate(expense.date);
     setDescription(expense.description || "");
     setRecurring(expense.recurring);
@@ -102,6 +140,7 @@ function ExpensesPage() {
   const handleCancelEdit = () => {
     setEditingId(null);
     setAmount("");
+    setSelectedCurrency(userCurrency.code);
     setDate("");
     setDescription("");
     setRecurring(false);
@@ -134,6 +173,92 @@ function ExpensesPage() {
     <div>
       <h1>Expenses</h1>
       
+      {baseCurrencyError && (
+        <div
+          style={{
+            padding: 16,
+            marginBottom: 16,
+            borderRadius: 8,
+            backgroundColor: "#eff6ff",
+            border: "1px solid #3b82f6",
+            color: "#1e40af",
+            fontWeight: 500
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <svg style={{ width: 20, height: 20, flexShrink: 0 }} fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <strong>Base Currency Setup Required</strong>
+          </div>
+          <p style={{ margin: 0, fontSize: 14 }}>
+            You need to set up a budget first to establish your base currency. This will be the currency all your expenses are stored in for consistent calculations.
+          </p>
+          <div style={{ marginTop: 12 }}>
+            <button
+              onClick={() => navigate('/settings')}
+              style={{
+                backgroundColor: "#3b82f6",
+                color: "white",
+                padding: "8px 16px",
+                borderRadius: 6,
+                border: "none",
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: "pointer"
+              }}
+            >
+              Set Up Budget →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {apiError && (
+        <div
+          style={{
+            padding: 16,
+            marginBottom: 16,
+            borderRadius: 8,
+            backgroundColor: apiError.type === "AUTHENTICATION_ERROR" ? "#fef2f2" : "#fffbeb",
+            border: `1px solid ${apiError.type === "AUTHENTICATION_ERROR" ? "#fecaca" : "#fde68a"}`,
+            color: apiError.type === "AUTHENTICATION_ERROR" ? "#991b1b" : "#92400e",
+            fontWeight: 500
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <svg style={{ width: 20, height: 20, flexShrink: 0 }} fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <strong>
+              {apiError.type === "AUTHENTICATION_ERROR" ? "Authentication Error" :
+               apiError.type === "BUSINESS_ERROR" ? "Action Required" :
+               "System Error"}
+            </strong>
+          </div>
+          <p style={{ margin: 0, fontSize: 14 }}>
+            {apiError.message}
+          </p>
+          <div style={{ marginTop: 12 }}>
+            <button
+              onClick={() => setApiError(null)}
+              style={{
+                backgroundColor: apiError.type === "AUTHENTICATION_ERROR" ? "#dc2626" : "#d97706",
+                color: "white",
+                padding: "6px 12px",
+                borderRadius: 4,
+                border: "none",
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer"
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       {warning && (
         <div
           style={{
@@ -156,6 +281,23 @@ function ExpensesPage() {
           <label>
             Amount
             <input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+          </label>
+          <label>
+            Currency
+            <select value={selectedCurrency} onChange={(e) => setSelectedCurrency(e.target.value)}>
+              <option value="USD">USD - US Dollar</option>
+              <option value="EUR">EUR - Euro</option>
+              <option value="GBP">GBP - British Pound</option>
+              <option value="JPY">JPY - Japanese Yen</option>
+              <option value="CNY">CNY - Chinese Yuan</option>
+              <option value="INR">INR - Indian Rupee</option>
+              <option value="AUD">AUD - Australian Dollar</option>
+              <option value="CAD">CAD - Canadian Dollar</option>
+              <option value="CHF">CHF - Swiss Franc</option>
+              <option value="SEK">SEK - Swedish Krona</option>
+              <option value="NZD">NZD - New Zealand Dollar</option>
+              <option value="SGD">SGD - Singapore Dollar</option>
+            </select>
           </label>
           <label>
             Date
@@ -278,19 +420,32 @@ function ExpensesPage() {
                 <td>{e.date}</td>
                 <td>{e.description}</td>
                 <td>{e.category?.name ?? "-"}</td>
-                <td>{formatAmount(e.amount)}</td>
+                <td>
+                  <div>
+                    <div style={{ fontWeight: 500 }}>
+                      {e.originalAmount && e.originalCurrency
+                        ? `${e.originalCurrency} ${e.originalAmount.toFixed(2)}`
+                        : formatAmount(e.amount)}
+                    </div>
+                    {e.originalAmount && e.originalCurrency && (
+                      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                        {user?.baseCurrency || "USD"} {e.amount.toFixed(2)}
+                      </div>
+                    )}
+                  </div>
+                </td>
                 <td>{e.recurring ? "Yes" : "No"}</td>
                 <td>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button 
-                      className="secondary-btn" 
+                    <button
+                      className="secondary-btn"
                       onClick={() => handleEdit(e)}
                       style={{ padding: "4px 12px", fontSize: 13 }}
                     >
                       Edit
                     </button>
-                    <button 
-                      className="secondary-btn" 
+                    <button
+                      className="secondary-btn"
                       onClick={() => handleDelete(e.id)}
                       style={{ padding: "4px 12px", fontSize: 13, color: "#ef4444" }}
                     >
@@ -308,5 +463,3 @@ function ExpensesPage() {
 }
 
 export default ExpensesPage;
-
-

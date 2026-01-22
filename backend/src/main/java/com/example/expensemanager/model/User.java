@@ -19,6 +19,9 @@ public class User {
     @Column(nullable = false, name = "full_name")
     private String fullName;
 
+    @Column(length = 3)
+    private String baseCurrency; // Base currency - must be set explicitly
+
     public Long getId() {
         return id;
     }
@@ -46,6 +49,12 @@ public class User {
     public void setFullName(String fullName) {
         this.fullName = fullName;
     }
+
+    public String getBaseCurrency() {
+        return baseCurrency;
+    }
+
+    public void setBaseCurrency(String baseCurrency) {
+        this.baseCurrency = baseCurrency;
+    }
 }
-
-

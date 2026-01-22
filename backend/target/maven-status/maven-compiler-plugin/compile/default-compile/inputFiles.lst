@@ -4,8 +4,10 @@
 /Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/config/SecurityConfig.java
 /Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/controller/AuthController.java
 /Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/controller/BudgetController.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/controller/BusinessException.java
 /Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/controller/CategoryController.java
 /Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/controller/ExpenseController.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/controller/GlobalExceptionHandler.java
 /Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/dto/AuthRequest.java
 /Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/dto/AuthResponse.java
 /Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/dto/BudgetRequest.java
@@ -25,5 +27,6 @@
 /Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/repository/UserRepository.java
 /Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/service/AuthService.java
 /Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/service/BudgetService.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/service/CurrencyService.java
 /Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/service/ExpenseService.java
 /Users/ai/Documents/sourceCode/expenseManager/backend/src/main/java/com/example/expensemanager/service/UserDetailsServiceImpl.java

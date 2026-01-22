@@ -1,6 +1,7 @@
 package com.example.expensemanager.service;
 
 import com.example.expensemanager.config.JwtUtils;
+import com.example.expensemanager.controller.BusinessException;
 import com.example.expensemanager.dto.AuthRequest;
 import com.example.expensemanager.dto.AuthResponse;
 import com.example.expensemanager.dto.RegisterRequest;
@@ -8,6 +9,7 @@ import com.example.expensemanager.model.Category;
 import com.example.expensemanager.model.User;
 import com.example.expensemanager.repository.CategoryRepository;
 import com.example.expensemanager.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -58,7 +60,7 @@ public class AuthService {
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtUtils.generateToken(userDetails);
 
-        return new AuthResponse(token, user.getEmail(), user.getFullName());
+        return new AuthResponse(token, user.getEmail(), user.getFullName(), user.getBaseCurrency());
     }
 
     private void createDefaultCategories(User user) {
@@ -85,16 +87,41 @@ public class AuthService {
     }
 
     public AuthResponse login(AuthRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+        // First check if user exists
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (user == null) {
+            throw new BusinessException(
+                "USER_NOT_FOUND",
+                "No account found with this email address. Would you like to register instead?",
+                HttpStatus.UNAUTHORIZED
+            );
+        }
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String token = jwtUtils.generateToken(userDetails);
+        // User exists, now try to authenticate
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
 
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
-        return new AuthResponse(token, user.getEmail(), user.getFullName());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String token = jwtUtils.generateToken(userDetails);
+
+            return new AuthResponse(token, user.getEmail(), user.getFullName(), user.getBaseCurrency());
+        } catch (Exception e) {
+            // Password is incorrect
+            throw new BusinessException(
+                "INVALID_PASSWORD",
+                "Incorrect password. Please check your password and try again.",
+                HttpStatus.UNAUTHORIZED
+            );
+        }
+    }
+
+    public void updateBaseCurrency(User user, String baseCurrency) {
+        user.setBaseCurrency(baseCurrency);
+        userRepository.save(user);
     }
 }

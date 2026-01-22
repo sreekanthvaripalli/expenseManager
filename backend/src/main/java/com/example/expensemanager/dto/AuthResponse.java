@@ -5,13 +5,15 @@ public class AuthResponse {
     private String token;
     private String email;
     private String fullName;
+    private String baseCurrency;
 
     public AuthResponse() {}
 
-    public AuthResponse(String token, String email, String fullName) {
+    public AuthResponse(String token, String email, String fullName, String baseCurrency) {
         this.token = token;
         this.email = email;
         this.fullName = fullName;
+        this.baseCurrency = baseCurrency;
     }
 
     public String getToken() {
@@ -36,5 +38,13 @@ public class AuthResponse {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public String getBaseCurrency() {
+        return baseCurrency;
+    }
+
+    public void setBaseCurrency(String baseCurrency) {
+        this.baseCurrency = baseCurrency;
     }
 }

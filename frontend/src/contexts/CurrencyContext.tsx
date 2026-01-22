@@ -31,15 +31,16 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [currency, setCurrencyState] = useState<Currency>(() => {
+    // Default to INR since that's what we use if no currency is selected
     const saved = localStorage.getItem("selectedCurrency");
     if (saved) {
       try {
         return JSON.parse(saved);
       } catch {
-        return CURRENCIES[3];
+        return CURRENCIES.find(c => c.code === "INR") || CURRENCIES[3];
       }
     }
-    return CURRENCIES[3];
+    return CURRENCIES.find(c => c.code === "INR") || CURRENCIES[3];
   });
 
   useEffect(() => {

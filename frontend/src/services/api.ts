@@ -13,13 +13,14 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-export async function getExpenses(params?: { startDate?: string; endDate?: string }) {
+export async function getExpenses(params?: { startDate?: string; endDate?: string; categoryId?: number }) {
   const res = await client.get("/expenses", { params });
   return res.data;
 }
 
 export async function createExpense(payload: {
   amount: number;
+  currency: string;
   date: string;
   description?: string;
   recurring?: boolean;
@@ -31,6 +32,7 @@ export async function createExpense(payload: {
 
 export async function updateExpense(id: number, payload: {
   amount: number;
+  currency: string;
   date: string;
   description?: string;
   recurring?: boolean;
@@ -90,6 +92,7 @@ export async function createBudget(payload: {
   month: number;
   limitAmount: number;
   categoryId?: number;
+  currency?: string;
 }) {
   const res = await client.post("/budgets", payload);
   return res.data as BudgetStatus;
@@ -100,6 +103,7 @@ export async function updateBudget(id: number, payload: {
   month: number;
   limitAmount: number;
   categoryId?: number;
+  currency?: string;
 }) {
   const res = await client.put(`/budgets/${id}`, payload);
   return res.data as BudgetStatus;
@@ -114,6 +118,7 @@ export interface AuthResponse {
   token: string;
   email: string;
   fullName: string;
+  baseCurrency?: string;
 }
 
 export async function register(payload: {
@@ -131,4 +136,8 @@ export async function login(payload: {
 }) {
   const res = await client.post("/auth/login", payload);
   return res.data as AuthResponse;
+}
+
+export async function updateBaseCurrency(baseCurrency: string) {
+  await client.put("/auth/base-currency", { baseCurrency });
 }

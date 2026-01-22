@@ -21,6 +21,8 @@ public class ExpenseRequest {
 
     private boolean recurring;
 
+    private String currency = "USD"; // Default to USD
+
     public BigDecimal getAmount() {
         return amount;
     }
@@ -60,6 +62,12 @@ public class ExpenseRequest {
     public void setRecurring(boolean recurring) {
         this.recurring = recurring;
     }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
 }
-
-
