@@ -1,12 +1,13 @@
-# Expense Manager
+# Expense Manager - Enterprise-Grade Secure Application
 
-A comprehensive full-stack expense management application built with Spring Boot (Java) and React (TypeScript). Track expenses, manage budgets, categorize spending, and view detailed financial reports with interactive charts.
+A comprehensive full-stack expense management application with enterprise-grade security, built with Spring Boot (Java) and React (TypeScript). Features secure expense tracking, budget management, categorization, and detailed financial reports with interactive charts.
 
 ## 🏗️ Architecture
 
-- **Backend**: Spring Boot 3.3.0 with Java 17, Spring Security, JWT authentication, H2 database
+- **Backend**: Spring Boot 3.3.0 with Java 17, Spring Security 6.3.0, Argon2 password hashing, JWT authentication, H2/PostgreSQL database
 - **Frontend**: React 18 with TypeScript, Vite, Tailwind CSS, Recharts for data visualization
-- **Database**: H2 (in-memory for development/demo)
+- **Security**: TLS 1.3 encryption, AES-GCM data encryption, rate limiting, security audit logging
+- **Database**: H2 (development), PostgreSQL (production)
 
 ## 📋 Prerequisites
 
