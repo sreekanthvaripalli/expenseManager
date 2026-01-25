@@ -1,0 +1,20 @@
+-------------------------------------------------------------------------------
+Test set: com.example.expensemanager.service.ExpenseServiceTest
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 0.314 s <<< FAILURE! -- in com.example.expensemanager.service.ExpenseServiceTest
+com.example.expensemanager.service.ExpenseServiceTest.testCreateExpense -- Time elapsed: 0.009 s <<< ERROR!
+com.example.expensemanager.controller.BusinessException: Please set up a budget first before adding expenses.
+	at com.example.expensemanager.service.ExpenseService.createExpense(ExpenseService.java:45)
+	at com.example.expensemanager.service.ExpenseServiceTest.testCreateExpense(ExpenseServiceTest.java:72)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+com.example.expensemanager.service.ExpenseServiceTest.testUpdateExpense -- Time elapsed: 0.005 s <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "java.lang.Long.equals(Object)" because the return value of "com.example.expensemanager.model.User.getId()" is null
+	at com.example.expensemanager.service.ExpenseService.updateExpense(ExpenseService.java:133)
+	at com.example.expensemanager.service.ExpenseServiceTest.testUpdateExpense(ExpenseServiceTest.java:137)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

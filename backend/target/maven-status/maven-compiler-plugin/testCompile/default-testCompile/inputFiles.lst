@@ -1,0 +1,16 @@
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/ExpenseManagerApplicationTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/config/JwtUtilsTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/controller/AuthControllerTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/model/BudgetTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/model/CategoryTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/model/ExpenseTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/model/UserTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/repository/BudgetRepositoryTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/repository/CategoryRepositoryTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/repository/ExpenseRepositoryTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/repository/UserRepositoryTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/service/AuthServiceTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/service/BudgetServiceTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/service/CurrencyServiceTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/service/ExpenseServiceTest.java
+/Users/ai/Documents/sourceCode/expenseManager/backend/src/test/java/com/example/expensemanager/service/UserDetailsServiceImplTest.java
