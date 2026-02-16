@@ -26,13 +26,13 @@ Before running this application, ensure you have the following installed:
 ### Optional (Recommended)
 - **Git** for version control
 - **Visual Studio Code** or IntelliJ IDEA for development
-- **Postman** or similar tool for API testing
+- **Postman** for API testing
 
 ## 🚀 Quick Start
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/sreekanthvaripalli/expenseManager.git
 cd expenseManager
 ```
 
@@ -52,7 +52,7 @@ mvn spring-boot:run
 The backend will start on `http://localhost:8080`
 
 #### Alternative: Using IDE
-- Open the `backend` folder in your Java IDE
+- Open the `backend` folder in your IDE (IntelliJ IDEA recommended)
 - Run the `ExpenseManagerApplication.java` main class
 
 ### 3. Frontend Setup
@@ -237,6 +237,83 @@ To change currency:
 
 **Note**: Currency selection is stored locally in your browser.
 
+## 🧪 Testing
+
+### Backend Tests
+
+#### Run All Tests
+```bash
+cd backend
+mvn test
+```
+
+#### Run Tests with Coverage Report
+```bash
+cd backend
+mvn test jacoco:report
+```
+
+#### View Coverage Report
+Open `backend/target/site/jacoco/index.html` in your browser
+
+#### Run Specific Test Class
+```bash
+cd backend
+mvn test -Dtest=AuthServiceTest
+```
+
+#### Run Tests Excluding Integration Tests
+```bash
+cd backend
+mvn test -DskipIntegrationTests=true
+```
+
+### Frontend Tests
+
+#### Run All Tests
+```bash
+cd frontend
+npm test
+```
+
+#### Run Tests in Watch Mode
+```bash
+cd frontend
+npm test -- --watch
+```
+
+#### Run Tests with Coverage
+```bash
+cd frontend
+npm test -- --run --coverage
+```
+
+#### View Coverage Report
+Open `frontend/coverage/index.html` in your browser
+
+#### Run Specific Test File
+```bash
+cd frontend
+npm test -- --run LoginPage.test.tsx
+```
+
+### Test Coverage Summary
+
+| Component | Coverage | Tests |
+|-----------|----------|-------|
+| **Backend** | 77% instructions, 80% lines | 67 tests |
+| **Frontend** | 76% statements, 78% lines | 75 tests |
+| **Total** | ~77% | 142 tests |
+
+### Running Both Tests Together
+```bash
+# Terminal 1 - Backend
+cd backend && mvn test
+
+# Terminal 2 - Frontend
+cd frontend && npm test -- --run --coverage
+```
+
 ## 🔍 API Documentation
 
 The backend provides a comprehensive REST API. Access the Swagger documentation at:
@@ -267,20 +344,6 @@ The backend provides a comprehensive REST API. Access the Swagger documentation 
 - `PUT /api/budgets/{id}` - Update budget
 - `DELETE /api/budgets/{id}` - Delete budget
 
-## 🧪 Testing
-
-### Backend Tests
-```bash
-cd backend
-mvn test
-```
-
-### Frontend Tests
-```bash
-cd frontend
-npm test
-```
-
 ## 🏭 Production Deployment
 
 ### Backend Production Setup
@@ -299,7 +362,16 @@ npm run build
 Deploy the `dist` folder to your web server.
 
 ### Docker Deployment (Optional)
-Create `Dockerfile` and `docker-compose.yml` for containerized deployment.
+
+#### Build Docker Image
+```bash
+docker build -t expensemanager backend/
+```
+
+#### Run with Docker Compose
+```bash
+docker-compose up -d
+```
 
 ## 🐛 Troubleshooting
 
@@ -309,6 +381,7 @@ Create `Dockerfile` and `docker-compose.yml` for containerized deployment.
 - Ensure Java 17+ is installed and JAVA_HOME is set
 - Check that port 8080 is not in use
 - Verify Maven installation
+- Run `mvn clean compile` to ensure dependencies are downloaded
 
 #### Frontend Won't Start
 - Ensure Node.js 18+ is installed
@@ -319,10 +392,18 @@ Create `Dockerfile` and `docker-compose.yml` for containerized deployment.
 - Clear browser localStorage
 - Check that backend is running on port 8080
 - Verify JWT token hasn't expired (24 hours)
+- Check browser console for CORS errors
 
 #### Database Issues
 - For H2 console access, ensure `spring.h2.console.enabled=true`
 - Check database URL in application.yml
+- Data resets on restart (H2 in-memory)
+
+#### Test Failures
+- Backend: Run `mvn clean test` to refresh
+- Frontend: Delete `node_modules` and reinstall
+- Check Java version (needs 17+)
+- Ensure ports 8080 and 5173 are free
 
 ### Getting Help
 - Check the browser developer console for frontend errors
@@ -332,11 +413,50 @@ Create `Dockerfile` and `docker-compose.yml` for containerized deployment.
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
 4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+5. Ensure all tests pass:
+   - Backend: `mvn test`
+   - Frontend: `npm test -- --run`
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+## 📄 Project Structure
+
+```
+expenseManager/
+├── backend/                    # Spring Boot backend
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/        # Java source code
+│   │   │   │   └── com/example/expensemanager/
+│   │   │   │       ├── config/      # Security & JWT config
+│   │   │   │       ├── controller/  # REST controllers
+│   │   │   │       ├── dto/         # Data transfer objects
+│   │   │   │       ├── model/       # Entity models
+│   │   │   │       ├── repository/  # Data repositories
+│   │   │   │       └── service/     # Business logic
+│   │   │   └── resources/
+│   │   │       └── application.yml  # App configuration
+│   │   └── test/            # Test files
+│   └── pom.xml              # Maven dependencies
+│
+├── frontend/                  # React frontend
+│   ├── src/
+│   │   ├── components/     # Reusable React components
+│   │   ├── contexts/       # React contexts (Auth, Currency)
+│   │   ├── pages/          # Page components
+│   │   ├── services/       # API service functions
+│   │   └── styles.css      # Global styles
+│   ├── package.json        # NPM dependencies
+│   └── vite.config.ts      # Vite configuration
+│
+├── screenshots/             # Application screenshots
+├── README.md               # This file
+└── COVERAGE_REPORT.md      # Test coverage report
+```
 
 ## 📄 License
 
@@ -348,3 +468,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Charts powered by Recharts
 - UI styling with Tailwind CSS
 - Authentication with JWT and Spring Security
+- Password hashing with Argon2
