@@ -13,8 +13,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Map;
-
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -46,7 +44,7 @@ class AuthControllerTest {
 
         AuthResponse response = new AuthResponse("token", "test@example.com", "Test User", "USD");
 
-        when(authService.register(any(RegisterRequest.class))).thenReturn(response);
+        when(authService.register(any(RegisterRequest.class), anyString())).thenReturn(response);
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/register")
@@ -66,7 +64,7 @@ class AuthControllerTest {
 
         AuthResponse response = new AuthResponse("token", "test@example.com", "Test User", "USD");
 
-        when(authService.login(any(AuthRequest.class))).thenReturn(response);
+        when(authService.login(any(AuthRequest.class), anyString())).thenReturn(response);
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/login")

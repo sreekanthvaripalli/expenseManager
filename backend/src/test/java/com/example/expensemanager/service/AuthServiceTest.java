@@ -48,12 +48,16 @@ class AuthServiceTest {
     @Mock
     private UserDetailsServiceImpl userDetailsService;
 
+    @Mock
+    private AuditService auditService;
+
     @InjectMocks
     private AuthService authService;
 
     private RegisterRequest registerRequest;
     private AuthRequest authRequest;
     private User user;
+    private static final String TEST_IP = "127.0.0.1";
 
     @BeforeEach
     void setUp() {
@@ -85,7 +89,7 @@ class AuthServiceTest {
         lenient().when(jwtUtils.generateToken(any(UserDetails.class))).thenReturn("jwtToken");
 
         // Act
-        AuthResponse response = authService.register(registerRequest);
+        AuthResponse response = authService.register(registerRequest, TEST_IP);
 
         // Assert
         assertNotNull(response);
@@ -99,6 +103,7 @@ class AuthServiceTest {
         verify(userRepository).save(any(User.class));
         verify(categoryRepository, times(12)).save(any()); // 12 default categories
         verify(jwtUtils).generateToken(userDetails);
+        verify(auditService).logRegistration("test@example.com", TEST_IP);
     }
 
     @Test
@@ -107,7 +112,7 @@ class AuthServiceTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            authService.register(registerRequest);
+            authService.register(registerRequest, TEST_IP);
         });
 
         assertEquals("Email already registered", exception.getMessage());
@@ -128,7 +133,7 @@ class AuthServiceTest {
         lenient().when(jwtUtils.generateToken(any(UserDetails.class))).thenReturn("jwtToken");
 
         // Act
-        AuthResponse response = authService.login(authRequest);
+        AuthResponse response = authService.login(authRequest, TEST_IP);
 
         // Assert
         assertNotNull(response);
@@ -140,6 +145,7 @@ class AuthServiceTest {
         verify(userRepository).findByEmail("test@example.com");
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(jwtUtils).generateToken(userDetails);
+        verify(auditService).logLoginAttempt("test@example.com", true, TEST_IP);
     }
 
     @Test
@@ -148,13 +154,14 @@ class AuthServiceTest {
 
         // Act & Assert
         BusinessException exception = assertThrows(BusinessException.class, () -> {
-            authService.login(authRequest);
+            authService.login(authRequest, TEST_IP);
         });
 
         assertEquals("USER_NOT_FOUND", exception.getErrorCode());
         assertEquals(HttpStatus.UNAUTHORIZED, exception.getHttpStatus());
         verify(userRepository).findByEmail("test@example.com");
         verify(authenticationManager, never()).authenticate(any());
+        verify(auditService).logLoginAttempt("test@example.com", false, TEST_IP);
     }
 
     @Test
@@ -165,13 +172,14 @@ class AuthServiceTest {
 
         // Act & Assert
         BusinessException exception = assertThrows(BusinessException.class, () -> {
-            authService.login(authRequest);
+            authService.login(authRequest, TEST_IP);
         });
 
         assertEquals("INVALID_PASSWORD", exception.getErrorCode());
         assertEquals(HttpStatus.UNAUTHORIZED, exception.getHttpStatus());
         verify(userRepository).findByEmail("test@example.com");
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(auditService).logLoginAttempt("test@example.com", false, TEST_IP);
     }
 
     @Test

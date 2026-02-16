@@ -9,6 +9,7 @@ import com.example.expensemanager.model.Category;
 import com.example.expensemanager.model.User;
 import com.example.expensemanager.repository.CategoryRepository;
 import com.example.expensemanager.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,22 +28,25 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final UserDetailsServiceImpl userDetailsService;
+    private final AuditService auditService;
 
     public AuthService(AuthenticationManager authenticationManager,
                       UserRepository userRepository,
                       CategoryRepository categoryRepository,
                       PasswordEncoder passwordEncoder,
                       JwtUtils jwtUtils,
-                      UserDetailsServiceImpl userDetailsService) {
+                      UserDetailsServiceImpl userDetailsService,
+                      AuditService auditService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
         this.userDetailsService = userDetailsService;
+        this.auditService = auditService;
     }
 
-    public AuthResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request, String ipAddress) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email already registered");
         }
@@ -56,6 +60,9 @@ public class AuthService {
 
         // Create default categories for new user
         createDefaultCategories(user);
+        
+        // Log registration
+        auditService.logRegistration(request.getEmail(), ipAddress);
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtUtils.generateToken(userDetails);
@@ -86,11 +93,12 @@ public class AuthService {
         categoryRepository.save(category);
     }
 
-    public AuthResponse login(AuthRequest request) {
+    public AuthResponse login(AuthRequest request, String ipAddress) {
         // First check if user exists
         User user = userRepository.findByEmail(request.getEmail()).orElse(null);
 
         if (user == null) {
+            auditService.logLoginAttempt(request.getEmail(), false, ipAddress);
             throw new BusinessException(
                 "USER_NOT_FOUND",
                 "No account found with this email address. Would you like to register instead?",
@@ -109,8 +117,14 @@ public class AuthService {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String token = jwtUtils.generateToken(userDetails);
 
+            // Log successful login
+            auditService.logLoginAttempt(request.getEmail(), true, ipAddress);
+
             return new AuthResponse(token, user.getEmail(), user.getFullName(), user.getBaseCurrency());
         } catch (Exception e) {
+            // Log failed login
+            auditService.logLoginAttempt(request.getEmail(), false, ipAddress);
+            
             // Password is incorrect
             throw new BusinessException(
                 "INVALID_PASSWORD",
