@@ -50,9 +50,9 @@ npm test -- --run LoginPage.test.tsx
 
 | Component | Coverage | Tests |
 |-----------|----------|-------|
-| **Backend** | 77% instructions, 80% lines | 67 tests |
+| **Backend** | 82% instructions, 80% lines | 98 tests |
 | **Frontend** | 76% statements, 78% lines | 75 tests |
-| **Total** | ~77% | 142 tests |
+| **Total** | ~79% | 173 tests |
 
 ### Viewing Coverage Reports
 
@@ -98,12 +98,21 @@ mvn test -Dtest="*ServiceTest"
 | `AuthServiceTest` | Authentication logic |
 | `BudgetServiceTest` | Budget management |
 | `CurrencyServiceTest` | Currency conversion |
+| `UserDetailsServiceImplTest` | User details service |
 | `ExpenseControllerTest` | Expense endpoints |
 | `AuthControllerTest` | Auth endpoints |
+| `GlobalExceptionHandlerTest` | Exception handling |
+| `RateLimitFilterTest` | Rate limiting |
+| `AuditServiceTest` | Audit logging |
 | `BudgetTest` | Budget entity |
 | `CategoryTest` | Category entity |
 | `ExpenseTest` | Expense entity |
 | `UserTest` | User entity |
+| `BudgetRepositoryTest` | Budget repository |
+| `CategoryRepositoryTest` | Category repository |
+| `ExpenseRepositoryTest` | Expense repository |
+| `UserRepositoryTest` | User repository |
+| `JwtUtilsTest` | JWT utilities |
 
 ---
 
@@ -313,9 +322,10 @@ jobs:
 | API Service | 85%+ |
 
 Current Status:
-- ✅ Backend Service: 78%
+- ✅ Backend Service: 85%
 - ✅ Backend Controller: 63%
-- ✅ Backend Models: 98%
+- ✅ Backend Models: 100%
+- ✅ Backend DTO: 86%
 - ✅ Frontend: 76%
 
 ---

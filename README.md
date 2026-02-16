@@ -301,9 +301,9 @@ npm test -- --run LoginPage.test.tsx
 
 | Component | Coverage | Tests |
 |-----------|----------|-------|
-| **Backend** | 77% instructions, 80% lines | 67 tests |
+| **Backend** | 82% instructions, 80% lines | 98 tests |
 | **Frontend** | 76% statements, 78% lines | 75 tests |
-| **Total** | ~77% | 142 tests |
+| **Total** | ~79% | 173 tests |
 
 ### Running Both Tests Together
 ```bash
