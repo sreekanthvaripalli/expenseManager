@@ -1,0 +1,15 @@
+{
+  "id": "pentest-env",
+  "name": "Penetration Test Environment",
+  "values": [
+    {"key": "baseUrl", "value": "http://localhost:8080", "enabled": true},
+    {"key": "validToken", "value": "", "enabled": true},
+    {"key": "invalidToken", "value": "eyJhbGciOiJIUzI1NiJ9.invalid_token", "enabled": true},
+    {"key": "expiredToken", "value": "eyJhbGciOiJIUzI1NiJ9.expired_token", "enabled": true},
+    {"key": "malformedToken", "value": "not.a.jwt.token", "enabled": true},
+    {"key": "userId", "value": "1", "enabled": true},
+    {"key": "categoryId", "value": "1", "enabled": true},
+    {"key": "expenseId", "value": "1", "enabled": true},
+    {"key": "budgetId", "value": "1", "enabled": true}
+  ]
+}
