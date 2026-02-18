@@ -35,7 +35,8 @@ CREATE TABLE users (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   email VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  full_name VARCHAR(255) NOT NULL
+  full_name VARCHAR(255) NOT NULL,
+  base_currency VARCHAR(3)
 );
 ```
 
@@ -105,6 +106,9 @@ public class User {
     @Column(nullable = false, name = "full_name")
     private String fullName;
     
+    @Column(length = 3)
+    private String baseCurrency;
+    
     // Getters and setters
 }
 ```
@@ -147,7 +151,7 @@ public class Expense {
     private Category category;
     
     @Column(nullable = false)
-    private BigDecimal amount;
+    private BigDecimal amount; // Always stored in user's base currency
     
     @Column(nullable = false, name = "expense_date")
     private LocalDate date;
@@ -157,6 +161,12 @@ public class Expense {
     
     @Column
     private boolean recurring;
+    
+    @Column(length = 3)
+    private String originalCurrency; // Original currency entered by user
+    
+    @Column
+    private BigDecimal originalAmount; // Original amount entered by user
     
     // Getters and setters
 }
@@ -276,44 +286,8 @@ springdoc:
 #### CORS Configuration
 Enable CORS for all controllers with `@CrossOrigin(origins = "http://localhost:5173")`
 
-#### Demo Data Seed
-Create a CommandLineRunner to seed a demo user and default categories on startup:
-```java
-@Bean
-CommandLineRunner seedDemoData(UserRepository userRepository, CategoryRepository categoryRepository) {
-    return args -> {
-        if (userRepository.count() == 0) {
-            User u = new User();
-            u.setEmail("demo@example.com");
-            u.setFullName("Demo User");
-            u.setPasswordHash("demo");
-            userRepository.save(u);
-
-            // Create default categories
-            createCategory(categoryRepository, u, "Food & Dining", "#ef4444");
-            createCategory(categoryRepository, u, "Transportation", "#f59e0b");
-            createCategory(categoryRepository, u, "Shopping", "#8b5cf6");
-            createCategory(categoryRepository, u, "Entertainment", "#ec4899");
-            createCategory(categoryRepository, u, "Bills & Utilities", "#0ea5e9");
-            createCategory(categoryRepository, u, "Healthcare", "#10b981");
-            createCategory(categoryRepository, u, "Education", "#6366f1");
-            createCategory(categoryRepository, u, "Travel", "#14b8a6");
-            createCategory(categoryRepository, u, "Groceries", "#84cc16");
-            createCategory(categoryRepository, u, "Home & Garden", "#f97316");
-            createCategory(categoryRepository, u, "Personal Care", "#a855f7");
-            createCategory(categoryRepository, u, "Gifts & Donations", "#06b6d4");
-        }
-    };
-}
-
-private void createCategory(CategoryRepository categoryRepository, User user, String name, String color) {
-    Category category = new Category();
-    category.setUser(user);
-    category.setName(name);
-    category.setColor(color);
-    categoryRepository.save(category);
-}
-```
+#### Default Categories
+When a new user registers, 12 default categories are automatically created for them in `AuthService.java`:
 
 **Default Categories** (12 categories with distinct colors):
 1. **Food & Dining** - #ef4444 (Red)
@@ -520,15 +494,16 @@ Create CSS with:
 ### Initial Setup
 1. Start backend Spring Boot application
 2. H2 creates database schema automatically (ddl-auto: create-drop)
-3. Demo user and 12 default categories are seeded automatically
-4. Start frontend Vite dev server
-5. Frontend connects to backend at localhost:8080
+3. Start frontend Vite dev server
+4. Frontend connects to backend at localhost:8080
 
 ### User Workflow
-1. **Dashboard**: View overall spending and budget status
-2. **Expenses**: Add/edit/delete expenses with category assignment
-3. **Reports**: Analyze spending patterns with charts
-4. **Settings**: 
+1. **Register**: Create a new account (12 default categories are created automatically)
+2. **Login**: Authenticate with email and password
+3. **Dashboard**: View overall spending and budget status
+4. **Expenses**: Add/edit/delete expenses with category assignment
+5. **Reports**: Analyze spending patterns with charts
+6. **Settings**: 
    - Select preferred currency
    - Create/manage categories
    - Set monthly budgets by category
@@ -550,8 +525,8 @@ Create CSS with:
 5. Implement service layer with business logic
 6. Create REST controllers with proper endpoints
 7. Configure application.yml
-8. Add CommandLineRunner to seed demo user and 12 default categories
-9. Enable CORS for frontend origin
+8. Enable CORS for frontend origin
+9. Create default categories in AuthService when user registers
 
 ### Frontend Setup
 1. Create Vite React TypeScript project

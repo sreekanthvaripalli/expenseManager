@@ -4,7 +4,7 @@ A comprehensive full-stack expense management application with enterprise-grade 
 
 ## 🏗️ Architecture
 
-- **Backend**: Spring Boot 3.3.0 with Java 17, Spring Security 6.3.0, Argon2 password hashing, JWT authentication, H2/PostgreSQL database
+- **Backend**: Spring Boot 3.5.0 with Java 21, Spring Security 6.5.0, Argon2 password hashing, JWT authentication, H2/PostgreSQL database
 - **Frontend**: React 18 with TypeScript, Vite, Tailwind CSS, Recharts for data visualization
 - **Security**: TLS 1.3 encryption, AES-GCM data encryption, rate limiting, security audit logging
 - **Database**: H2 (development), PostgreSQL (production)
@@ -14,7 +14,7 @@ A comprehensive full-stack expense management application with enterprise-grade 
 Before running this application, ensure you have the following installed:
 
 ### Required Software
-- **Java 17** or higher
+- **Java 21** or higher
   - Download from: https://adoptium.net/
   - Verify: `java -version`
 - **Node.js 18+** and npm
@@ -378,7 +378,7 @@ docker-compose up -d
 ### Common Issues
 
 #### Backend Won't Start
-- Ensure Java 17+ is installed and JAVA_HOME is set
+- Ensure Java 21+ is installed and JAVA_HOME is set
 - Check that port 8080 is not in use
 - Verify Maven installation
 - Run `mvn clean compile` to ensure dependencies are downloaded
@@ -402,7 +402,7 @@ docker-compose up -d
 #### Test Failures
 - Backend: Run `mvn clean test` to refresh
 - Frontend: Delete `node_modules` and reinstall
-- Check Java version (needs 17+)
+- Check Java version (needs 21+)
 - Ensure ports 8080 and 5173 are free
 
 ### Getting Help

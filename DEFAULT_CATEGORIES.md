@@ -1,6 +1,6 @@
 # Default Categories
 
-When the application boots up, the following 12 categories are automatically created for the demo user:
+When a new user registers, the following 12 categories are automatically created for them:
 
 ## Category List
 
@@ -21,42 +21,38 @@ When the application boots up, the following 12 categories are automatically cre
 
 ## Implementation
 
-Categories are seeded in `ExpenseManagerApplication.java`:
+Categories are created in `AuthService.java` when a new user registers:
 
 ```java
-@Bean
-CommandLineRunner seedDemoData(UserRepository userRepository, CategoryRepository categoryRepository) {
-    return args -> {
-        if (userRepository.count() == 0) {
-            User u = new User();
-            u.setEmail("demo@example.com");
-            u.setFullName("Demo User");
-            u.setPasswordHash("demo");
-            userRepository.save(u);
+private void createDefaultCategories(User user) {
+    createCategory(user, "Food & Dining", "#ef4444");
+    createCategory(user, "Transportation", "#f59e0b");
+    createCategory(user, "Shopping", "#8b5cf6");
+    createCategory(user, "Entertainment", "#ec4899");
+    createCategory(user, "Bills & Utilities", "#0ea5e9");
+    createCategory(user, "Healthcare", "#10b981");
+    createCategory(user, "Education", "#6366f1");
+    createCategory(user, "Travel", "#14b8a6");
+    createCategory(user, "Groceries", "#84cc16");
+    createCategory(user, "Home & Garden", "#f97316");
+    createCategory(user, "Personal Care", "#a855f7");
+    createCategory(user, "Gifts & Donations", "#06b6d4");
+}
 
-            // Create 12 default categories
-            createCategory(categoryRepository, u, "Food & Dining", "#ef4444");
-            createCategory(categoryRepository, u, "Transportation", "#f59e0b");
-            createCategory(categoryRepository, u, "Shopping", "#8b5cf6");
-            createCategory(categoryRepository, u, "Entertainment", "#ec4899");
-            createCategory(categoryRepository, u, "Bills & Utilities", "#0ea5e9");
-            createCategory(categoryRepository, u, "Healthcare", "#10b981");
-            createCategory(categoryRepository, u, "Education", "#6366f1");
-            createCategory(categoryRepository, u, "Travel", "#14b8a6");
-            createCategory(categoryRepository, u, "Groceries", "#84cc16");
-            createCategory(categoryRepository, u, "Home & Garden", "#f97316");
-            createCategory(categoryRepository, u, "Personal Care", "#a855f7");
-            createCategory(categoryRepository, u, "Gifts & Donations", "#06b6d4");
-        }
-    };
+private void createCategory(User user, String name, String color) {
+    Category category = new Category();
+    category.setUser(user);
+    category.setName(name);
+    category.setColor(color);
+    categoryRepository.save(category);
 }
 ```
 
 ## Features
 
-- **Auto-populated**: Categories are created automatically when the application starts
+- **Auto-populated**: Categories are created automatically when a user registers
 - **Distinct Colors**: Each category has a unique, visually distinct color
-- **User-specific**: Categories belong to the demo user
+- **User-specific**: Categories belong to each registered user
 - **Customizable**: Users can add, edit, or delete categories through the Settings page
 - **Visual Indicators**: Colors appear next to category names throughout the application
 
